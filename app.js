@@ -3,6 +3,7 @@
 
 const STORAGE_KEY = 'todo-app-items';
 const THEME_STORAGE_KEY = 'todo-theme-preference';
+const FILTER_STORAGE_KEY = 'todo-filter-preference';
 
 const todoForm = document.getElementById('todo-form');
 const todoInput = document.getElementById('todo-input');
@@ -84,6 +85,17 @@ function initTheme() {
 function toggleTheme() {
   const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
   applyTheme(nextTheme, true);
+}
+
+// 讀取使用者上次選擇的篩選條件，若值不合法則回退成全部。
+function getFilterPreference() {
+  const storedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
+
+  if (storedFilter === 'all' || storedFilter === 'active' || storedFilter === 'completed') {
+    return storedFilter;
+  }
+
+  return 'all';
 }
 
 // 依照目前篩選狀態回傳要顯示的待辦資料。
@@ -225,6 +237,7 @@ function deleteTodo(id) {
 // 更新目前選中的篩選按鈕樣式與狀態。
 function setFilter(nextFilter) {
   currentFilter = nextFilter;
+  localStorage.setItem(FILTER_STORAGE_KEY, currentFilter);
 
   filterButtons.forEach((button) => {
     const isActive = button.dataset.filter === currentFilter;
@@ -233,6 +246,17 @@ function setFilter(nextFilter) {
   });
 
   renderTodos();
+}
+
+// 初始化篩選狀態，讓重新整理後仍保持上一個選擇。
+function initFilter() {
+  currentFilter = getFilterPreference();
+
+  filterButtons.forEach((button) => {
+    const isActive = button.dataset.filter === currentFilter;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
 }
 
 // 監聽表單提交事件，新增待辦事項。
@@ -273,4 +297,5 @@ if (typeof prefersDarkScheme.addEventListener === 'function') {
 
 // 初始化頁面，先套用主題，再渲染待辦清單。
 initTheme();
+initFilter();
 renderTodos();
